@@ -1,0 +1,38 @@
+[alias]
+  p = push
+  move = "!\
+    BRANCHES=$(git branch --format='%(refname:short)' --contains $2); \
+    mv() { \
+	  for branch in $BRANCHES; \
+	    do \
+	      root=$(git merge-base develop $branch); \
+	      git rebase --committer-date-is-author-date --onto $1 $root $branch; \
+	  done; \
+	}; \
+    mv"
+  # 1. rebase 전 push해 변경 사항 백업
+  # 2. interactive rebase 실행
+  # 3. interactive rebase 종료 후 변경 사항 복구
+  r-i = "!$(git rebase -i HEAD~$1)"   
+  r-d = "pull --rebase origin dev"
+  del-r = "!BRANCH=$(git branch --show-current) && if [ "$BRANCH" = "dev" ] || [ "$BRANCH" = "main" ]; then echo "Error: Cannot delete dev or main branch."; else git push origin -d $BRANCH; fi"
+  branch-start = "!fn() { \
+      current_branch=$(git branch --show-current); \
+      rebase_commit=$(git reflog show --no-abbrev \"$current_branch\" | grep \"rebase (finish)\" | awk 'NR==1 { print $7 }'); \
+      if [ -n \"$rebase_commit\" ]; then \
+          echo \"$rebase_commit\"; \
+      else \
+          branch_commit=$(git reflog show --no-abbrev \"$current_branch\" | grep \"branch: Created from\" | awk '{print $1;}'); \
+          echo \"$branch_commit\"; \
+      fi \
+    }; fn"
+  r-onto = "!fn() { \
+      start_commit=$(git branch-start); \
+      if [ -z \"$start_commit\" ]; then \
+        echo \"No commit found to rebase onto.\"; \
+      elif [ $# -eq 1 ]; then \
+        git rebase --onto $1 $start_commit; \
+      else \
+        git rebase --onto dev $start_commit; \
+      fi \
+    }; fn"
