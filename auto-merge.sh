@@ -36,8 +36,8 @@ trap restore_stash EXIT
 # dev 브랜치로 전환 및 병합
 git checkout "$dev"
 git pull
-if ! git merge "$current" --no-edit; then
-  echo -en "${YELLOW}dev 브랜치에서 merge 충돌이 발생했습니다. 충돌을 해결하고 Enter를 누르세요.('q'를 입력해 종료할 수 있습니다.)...${RESET}"
+if ! git merge "$current" --no-ff --no-edit; then
+  echo -en "${YELLOW}dev 브랜치에서 병합 충돌이 발생했습니다. 충돌을 해결하고 커밋 후 Enter를 누르세요.('q'를 입력해 종료할 수 있습니다.)...${RESET}"
   read input
   [[ "$input" == "q" ]] && exit 1
 fi
@@ -45,8 +45,8 @@ fi
 # ci 브랜치로 전환 및 병합
 git checkout "$ci"
 git pull
-if ! git merge "$dev" --no-edit; then
-  echo -en "${YELLOW}ci 브랜치에서 merge 충돌이 발생했습니다. 충돌을 해결하고 Enter를 누르세요.('q'를 입력해 종료할 수 있습니다.)...${RESET}"
+if ! git merge "$dev" --no-ff --no-edit; then
+  echo -en "${YELLOW}ci 브랜치에서 병합 충돌이 발생했습니다. 충돌을 해결하고 커밋 후 Enter를 누르세요.('q'를 입력해 종료할 수 있습니다.)...${RESET}"
   read input
   [[ "$input" == "q" ]] && exit 1
 fi
@@ -64,3 +64,5 @@ git push
 
 # 원래 브랜치로 복귀
 git checkout "$current"
+git push origin --delete "$current"
+git rebase "$dev"
